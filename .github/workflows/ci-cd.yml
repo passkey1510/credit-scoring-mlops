@@ -1,0 +1,90 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "tests/**"
+      - "model/**"
+      - "dashboard/**"
+      - "pipeline/**"
+      - "requirements.txt"
+      - "Dockerfile"
+      - ".github/workflows/ci-cd.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "tests/**"
+      - "model/**"
+      - "dashboard/**"
+      - "pipeline/**"
+      - "requirements.txt"
+      - "Dockerfile"
+      - ".github/workflows/ci-cd.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Build Docker image
+        run: docker build -t credit-scoring:${{ github.sha }} .
+
+      - name: Test Docker health
+        run: |
+          docker run -d --name test-container -p 8000:8000 -p 7860:7860 credit-scoring:${{ github.sha }}
+          sleep 10
+          curl -f http://localhost:8000/health || exit 1
+          docker stop test-container
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to Hugging Face Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/passkey1510/credit-scoring-mlops
+          git push hf main --force
