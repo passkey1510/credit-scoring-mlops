@@ -1,0 +1,46 @@
+{
+  "version": "2.0",
+  "creation_date": "2026-04-08",
+  "source": "../project-6/data/application_train.csv",
+  "total_source_rows": 307511,
+  "datasets": {
+    "reference_data.parquet": {
+      "description": "Training reference for drift detection (random sample)",
+      "rows": 200000,
+      "columns": 122,
+      "sha256": "a84c0627ffb2fc502b02f98b777487dd003d9a1f2a9966e44e3cb4610d092818",
+      "random_state": 42
+    },
+    "test_data.parquet": {
+      "description": "Test data for model validation (AUC comparison)",
+      "rows": 50000,
+      "columns": 122,
+      "sha256": "d97ea2a6f5db42f304220bedd9b93f9628823f4e3f6376658ac1cefe8e5e7f9d",
+      "random_state": 42
+    },
+    "drift_pool.parquet": {
+      "description": "Remaining rows used as pool for drift simulation scenarios",
+      "rows": 57511,
+      "columns": 122,
+      "sha256": "e7363342b0be34113dd67c8efce75794be9ef8c499f1a60306e8427a77466bc4",
+      "random_state": null
+    }
+  },
+  "model_version": "v1",
+  "model_path": "/Users/passkey1510/workspace/data-scientist-ocr/project-8/model/model.lgb",
+  "updated_at": "2026-04-08T08:45:31.920217+00:00",
+  "previous_model_path": "/Users/passkey1510/workspace/data-scientist-ocr/project-8/model/model_previous.lgb",
+  "validation_metrics": {
+    "timestamp": "2026-04-08T08:44:56.363234+00:00",
+    "candidate_path": "/Users/passkey1510/workspace/data-scientist-ocr/project-8/model/model_candidate.lgb",
+    "champion_path": "/Users/passkey1510/workspace/data-scientist-ocr/project-8/model/model.lgb",
+    "candidate_auc": 0.747758,
+    "champion_auc": 0.724871,
+    "auc_diff": 0.022887,
+    "drift_summary": {
+      "dataset_drift": true,
+      "n_features_checked": 104,
+      "timestamp": "2026-04-08T08:44:53.840962+00:00"
+    }
+  }
+}
