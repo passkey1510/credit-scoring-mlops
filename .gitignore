@@ -34,3 +34,8 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Internal notes
+NOTES_DETAILLEES.md
+REQUIREMENTS.md
+TODO.md
