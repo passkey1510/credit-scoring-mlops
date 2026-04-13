@@ -87,5 +87,6 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          git config lfs.allowincompletepush true
           git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/passkey1510/credit-scoring-mlops
           git push hf main --force
