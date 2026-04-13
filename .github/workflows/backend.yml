@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Backend CI/CD
 
 on:
   workflow_dispatch:
@@ -8,22 +8,22 @@ on:
       - "app/**"
       - "tests/**"
       - "model/**"
-      - "dashboard/**"
       - "pipeline/**"
       - "requirements.txt"
       - "Dockerfile"
-      - ".github/workflows/ci-cd.yml"
+      - "start.sh"
+      - ".github/workflows/backend.yml"
   pull_request:
     branches: [main]
     paths:
       - "app/**"
       - "tests/**"
       - "model/**"
-      - "dashboard/**"
       - "pipeline/**"
       - "requirements.txt"
       - "Dockerfile"
-      - ".github/workflows/ci-cd.yml"
+      - "start.sh"
+      - ".github/workflows/backend.yml"
 
 jobs:
   test:
