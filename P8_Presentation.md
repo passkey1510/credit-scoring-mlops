@@ -265,6 +265,8 @@ C'est pour cela qu'il faut :
 
 <!-- _class: title -->
 
-# Merci
+# Merci — Questions ?
 
-## Questions ?
+**GitHub** : `github.com/passkey1510/credit-scoring-mlops`
+**API** : `huggingface.co/spaces/passkey1510/credit-scoring-mlops`
+**Dashboard** : `huggingface.co/spaces/passkey1510/credit-scoring-dashboard`
