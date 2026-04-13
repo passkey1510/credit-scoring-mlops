@@ -21,6 +21,6 @@ COPY start.sh .
 RUN chmod +x start.sh
 RUN mkdir -p logs
 
-EXPOSE 7860 8000
+EXPOSE 7860
 
 CMD ["./start.sh"]
