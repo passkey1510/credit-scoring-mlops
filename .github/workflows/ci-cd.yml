@@ -87,7 +87,8 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Create orphan branch with only current state to avoid LFS history issues
+          git config user.email "ci@github.com"
+          git config user.name "CI"
           git checkout --orphan hf-deploy
           git add -A
           git commit -m "Deploy to HuggingFace Spaces"
