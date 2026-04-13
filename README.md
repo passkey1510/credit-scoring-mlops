@@ -1,3 +1,12 @@
+---
+title: Credit Scoring MLOps
+emoji: 📊
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # Project 8 — MLOps Partie 2 : Déploiement et Monitoring
 
 API de scoring crédit basée sur un modèle LightGBM, avec monitoring en temps réel, détection de drift, pipeline de réentraînement automatisé et validation humaine.
