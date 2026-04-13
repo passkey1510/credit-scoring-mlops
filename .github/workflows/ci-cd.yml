@@ -87,6 +87,9 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git config lfs.allowincompletepush true
+          # Create orphan branch with only current state to avoid LFS history issues
+          git checkout --orphan hf-deploy
+          git add -A
+          git commit -m "Deploy to HuggingFace Spaces"
           git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/passkey1510/credit-scoring-mlops
-          git push hf main --force
+          git push hf hf-deploy:main --force
