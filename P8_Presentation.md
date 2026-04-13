@@ -88,33 +88,15 @@ style: |
 
 ---
 
-# Architecture MLOps — Vue d'ensemble
+# Architecture — Serving & Monitoring
 
-```
-                    ┌─────────────────────────────────┐
-                    │        Donnees versionnees       │
-                    │  reference (200K) + test (50K)   │
-                    │  + pool de drift (57K)           │
-                    │  dataset_registry.json (SHA-256) │
-                    └──────────────┬──────────────────┘
-                                   │
-         ┌─────────────────────────┼─────────────────────────┐
-         ▼                         ▼                         ▼
-  ┌──────────────┐     ┌───────────────────┐     ┌──────────────────┐
-  │  FastAPI      │     │  Streamlit        │     │  Pipeline        │
-  │  Serving      │────▶│  Dashboard        │     │  Reentrainement  │
-  │  port 8000    │     │  port 7860        │     │  retrain.py      │
-  └──────────────┘     └───────────────────┘     └────────┬─────────┘
-         │                       │                        │
-         │              predictions.jsonl          ┌──────▼───────┐
-         │                       │                 │ Gate humaine  │
-         │                       ▼                 │ approve.py    │
-         │              ┌────────────────┐         └──────┬───────┘
-         │              │ Evidently AI   │                │
-         │              │ Drift Detection│───drift───────▶│
-         │              └────────────────┘         Nouveau modele
-         └──────────────────────────────────────────promu──┘
-```
+![w:750](screenshots/architecture.svg)
+
+---
+
+# Architecture — Pipeline de Reentrainement
+
+![w:900](screenshots/architecture2.svg)
 
 ---
 
@@ -134,23 +116,15 @@ style: |
 
 # API de Scoring — FastAPI
 
-## 3 endpoints
-
 | Endpoint | Methode | Description |
 |----------|---------|-------------|
-| `/health` | GET | Verification de sante (liveness probe) |
+| `/health` | GET | Verification de sante |
 | `/predict` | POST | Prediction unique — 1 client |
 | `/predict/batch` | POST | Predictions par lot — N clients |
 
-**Performance mesuree** :
+**Performance** : Latence **1.13 ms**, P99 **1.64 ms**, Batch → **0.133 ms/record** — 18 tests pytest
 
-| Metrique | Valeur |
-|----------|--------|
-| Latence moyenne | **1.13 ms** par prediction |
-| P99 | 1.64 ms |
-| Batch 1000 | **0.133 ms/record** (20x plus efficace) |
-
-18 tests unitaires (pytest) couvrent l'API, la validation, et le modele.
+![w:300](screenshots/api_health.png)
 
 ---
 
@@ -221,20 +195,15 @@ Le reentrainement combine les donnees historiques (200K) avec les nouvelles donn
 
 # Human-in-the-loop — Approval Gate
 
-## Pourquoi ne pas deployer automatiquement ?
-
 **Credit scoring = secteur reglemente** :
-- Un modele qui refuse des credits doit etre **explicable et auditable**
-- Un reentrainement peut introduire un **biais** contre un groupe demographique
-- L'AUC sur le test set ne garantit pas le comportement en production
-
-**Resultats de notre pipeline** :
+- Modele explicable et auditable
+- Risque de biais demographique apres reentrainement
+- AUC test set ≠ comportement production
 
 | Modele | AUC |
 |--------|-----|
 | Champion (avant) | 0.7478 |
-| Candidat (apres) | **0.7492** |
-| Difference | **+0.0015** |
+| Candidat (apres) | **0.7492** (+0.0015) |
 
 L'expert revoit les metriques → execute `approve.py` → le candidat est promu champion.
 
@@ -259,17 +228,11 @@ Si le nouveau modele pose probleme → rollback vers `model_previous.lgb`.
 
 # Monitoring — Streamlit Dashboard
 
-## Suivi en temps reel des predictions
+| Latency Over Time (ms) | Prediction Outcomes |
+|:-:|:-:|
+| ![w:480](screenshots/visualization.png) | ![w:360](screenshots/newplot.png) |
 
-| Widget | Metrique |
-|--------|----------|
-| KPI row | Nombre de predictions, score moyen, latence moyenne |
-| Distribution des scores | Histogramme des probabilites |
-| Latence dans le temps | Evolution de la latence par prediction |
-| Outcomes | Repartition Default vs Approved (seuil 0.11) |
-| Probabilite dans le temps | Scores avec ligne de seuil |
-
-Le dashboard lit `predictions.jsonl` — chaque prediction est loguee en JSON structuré avec timestamp, probabilite, latence, IP client, et nombre de features manquantes.
+Le dashboard lit `predictions.jsonl` — JSON structure avec timestamp, probabilite, latence, IP client.
 
 ---
 

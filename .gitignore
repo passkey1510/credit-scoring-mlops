@@ -37,5 +37,10 @@ Thumbs.db
 
 # Internal notes
 NOTES_DETAILLEES.md
+NOTES_PRESENTATION.md
+NOTES_PRESENTATION.html
 REQUIREMENTS.md
 TODO.md
+
+# Scripts (local utilities)
+scripts/
