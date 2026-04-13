@@ -61,7 +61,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           cd /tmp/hf-dashboard
-          git init
+          git init -b main
           git config user.email "ci@github.com"
           git config user.name "CI"
           git add -A
