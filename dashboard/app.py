@@ -1,10 +1,9 @@
 """Streamlit monitoring dashboard for the credit scoring API."""
 
-import json
 import os
 import random
 import time
-from pathlib import Path
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -12,7 +11,7 @@ import plotly.express as px
 import requests as http_requests
 import streamlit as st
 
-API_URL = os.environ.get("API_URL", "http://localhost:8000")
+API_URL = os.environ.get("API_URL", "https://passkey1510-credit-scoring-mlops.hf.space")
 THRESHOLD = 0.11
 
 st.set_page_config(page_title="Credit Scoring Monitor", layout="wide")
@@ -35,12 +34,15 @@ def send_predictions(n: int):
             "EXT_SOURCE_3": random.uniform(0, 1),
         }
         try:
+            t0 = time.time()
             resp = http_requests.post(
                 f"{API_URL}/predict", json={"features": features}, timeout=10
             )
+            latency_ms = round((time.time() - t0) * 1000, 2)
             if resp.status_code == 200:
                 data = resp.json()
-                data["features"] = features
+                data["latency_ms"] = latency_ms
+                data["timestamp"] = datetime.now(timezone.utc).isoformat()
                 results.append(data)
         except Exception:
             pass
@@ -79,17 +81,19 @@ with st.sidebar:
     ext2 = st.slider("EXT_SOURCE_2", 0.0, 1.0, 0.5)
     if st.button("Predict"):
         try:
+            t0 = time.time()
             resp = http_requests.post(
                 f"{API_URL}/predict",
                 json={"features": {"AMT_INCOME_TOTAL": income, "AMT_CREDIT": credit, "EXT_SOURCE_2": ext2}},
                 timeout=10,
             )
+            latency_ms = round((time.time() - t0) * 1000, 2)
             r = resp.json()
             label = "Default" if r["prediction"] == 1 else "Approved"
             color = "red" if r["prediction"] == 1 else "green"
             st.markdown(f"**Probability**: {r['probability']:.4f}")
             st.markdown(f"**Decision**: :{color}[{label}]")
-            st.markdown(f"**Latency**: {r.get('latency_ms', 'N/A')} ms")
+            st.markdown(f"**Latency**: {latency_ms} ms")
         except Exception as e:
             st.error(f"Error: {e}")
 
@@ -102,13 +106,14 @@ if not predictions:
     st.stop()
 
 df = pd.DataFrame(predictions)
+df["timestamp"] = pd.to_datetime(df["timestamp"])
 
 # --- KPI row ---
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Predictions", len(df))
 col2.metric("Default Rate", f"{df['prediction'].mean():.1%}")
-col3.metric("Avg Probability", f"{df['probability'].mean():.4f}")
-col4.metric("Threshold", f"{THRESHOLD}")
+col3.metric("Avg Latency", f"{df['latency_ms'].mean():.1f} ms")
+col4.metric("Avg Probability", f"{df['probability'].mean():.4f}")
 
 st.divider()
 
@@ -116,11 +121,9 @@ st.divider()
 left, right = st.columns(2)
 
 with left:
-    st.subheader("Score Distribution")
-    counts, edges = np.histogram(df["probability"].dropna(), bins=20)
-    bin_labels = [f"{edges[i]:.3f}" for i in range(len(counts))]
-    hist_df = pd.DataFrame({"Score Range": bin_labels, "Count": counts})
-    st.bar_chart(hist_df, x="Score Range", y="Count", use_container_width=True)
+    st.subheader("Latency Over Time")
+    latency_series = df.set_index("timestamp")["latency_ms"]
+    st.line_chart(latency_series, use_container_width=True)
 
 with right:
     st.subheader("Prediction Outcomes")
@@ -139,6 +142,6 @@ st.divider()
 # --- Recent predictions table ---
 st.subheader("Recent Predictions")
 st.dataframe(
-    df[["probability", "prediction", "threshold"]].tail(50),
+    df[["timestamp", "probability", "prediction", "latency_ms"]].sort_values("timestamp", ascending=False).head(50),
     use_container_width=True,
 )
